@@ -31,7 +31,7 @@
   },
   "4": {
     "inputs": {
-      "ckpt_name": "albedobaseXL_v13.safetensors"
+      "ckpt_name": "albedobaseXL_v21.safetensors"
     },
     "class_type": "CheckpointLoaderSimple",
     "_meta": {
