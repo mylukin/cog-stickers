@@ -8,6 +8,8 @@ build:
     - torchaudio
     - torchsde
     - einops
+    - diffusers==0.25.0
+    - huggingface_hub==0.24.0
     - transformers>=4.25.1
     - safetensors>=0.3.0
     - aiohttp

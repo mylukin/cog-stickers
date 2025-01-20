@@ -14,7 +14,7 @@ from helpers.comfyui import ComfyUI
 OUTPUT_DIR = "/tmp/outputs"
 INPUT_DIR = "/tmp/inputs"
 COMFYUI_TEMP_OUTPUT_DIR = "ComfyUI/temp"
-IDLE_TIMEOUT = 60  # 1分钟超时
+IDLE_TIMEOUT = 1*60  # 1分钟超时
 
 mimetypes.add_type("image/webp", ".webp")
 
