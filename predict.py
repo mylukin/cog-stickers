@@ -5,80 +5,26 @@ import random
 import mimetypes
 from PIL import Image
 from typing import List
-import time
-import threading
-import torch
 from cog import BasePredictor, Input, Path
 from helpers.comfyui import ComfyUI
 
 OUTPUT_DIR = "/tmp/outputs"
 INPUT_DIR = "/tmp/inputs"
 COMFYUI_TEMP_OUTPUT_DIR = "ComfyUI/temp"
-IDLE_TIMEOUT = 1*60  # 1分钟超时
 
 mimetypes.add_type("image/webp", ".webp")
 
 with open("sticker_maker_api.json", "r") as file:
     workflow_json = file.read()
 
+
 class Predictor(BasePredictor):
     def setup(self):
         self.comfyUI = ComfyUI("127.0.0.1:8188")
         self.comfyUI.start_server(OUTPUT_DIR, INPUT_DIR)
         self.comfyUI.load_workflow(workflow_json)
-        self.last_request_time = time.time()
-        self.cleanup_timer = None
-        self.start_cleanup_timer()
-
-    def start_cleanup_timer(self):
-        """启动清理定时器"""
-        if self.cleanup_timer is not None:
-            self.cleanup_timer.cancel()
-        
-        self.cleanup_timer = threading.Timer(IDLE_TIMEOUT, self.cleanup_gpu_memory)
-        self.cleanup_timer.daemon = True  # 设置为守护线程
-        self.cleanup_timer.start()
-
-    def cleanup_gpu_memory(self):
-        """清理 GPU 显存"""
-        print("Cleaning up GPU memory due to inactivity...")
-        try:
-            # 停止 ComfyUI 服务
-            self.comfyUI.stop_server()
-            
-            # 清理 ComfyUI 相关资源
-            self.comfyUI.clear_queue()
-            
-            # 强制执行 Python 的垃圾回收
-            import gc
-            gc.collect()
-            
-            # 清理 PyTorch 缓存
-            if torch.cuda.is_available():
-                # 释放所有未使用的缓存
-                torch.cuda.empty_cache()
-                # 重置峰值内存统计
-                torch.cuda.reset_peak_memory_stats()
-                # 同步所有 CUDA 流
-                torch.cuda.synchronize()
-            
-            print("GPU memory cleaned up")
-            
-            # 重新启动 ComfyUI 服务
-            self.comfyUI.start_server(OUTPUT_DIR, INPUT_DIR)
-            self.comfyUI.load_workflow(workflow_json)
-            
-        except Exception as e:
-            print(f"Error during GPU cleanup: {str(e)}")
-            # 确保服务器重新启动
-            try:
-                self.comfyUI.start_server(OUTPUT_DIR, INPUT_DIR)
-                self.comfyUI.load_workflow(workflow_json)
-            except Exception as e2:
-                print(f"Error restarting server: {str(e2)}")
 
     def cleanup(self):
-        """清理临时文件和目录"""
         self.comfyUI.clear_queue()
         for directory in [OUTPUT_DIR, INPUT_DIR, COMFYUI_TEMP_OUTPUT_DIR]:
             if os.path.exists(directory):
@@ -145,11 +91,6 @@ class Predictor(BasePredictor):
         ),
     ) -> List[Path]:
         """Run a single prediction on the model"""
-        # 更新最后请求时间
-        self.last_request_time = time.time()
-        # 重置清理定时器
-        self.start_cleanup_timer()
-
         self.cleanup()
 
         if seed is None:
@@ -192,8 +133,3 @@ class Predictor(BasePredictor):
             files = optimised_files
 
         return files
-
-    def __del__(self):
-        """析构函数：确保清理定时器被正确关闭"""
-        if self.cleanup_timer:
-            self.cleanup_timer.cancel()
