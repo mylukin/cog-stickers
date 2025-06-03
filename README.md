@@ -10,37 +10,56 @@ You can directly use this API: <https://replicate.com/fofr/sticker-maker>
 - docker
 - [cog.run](https://cog.run/getting-started/)
 
-# Run
+# Quick Start
 
-1. clone code
+1. Clone code
 
 ```bash
 git clone --recurse-submodules https://github.com/mylukin/cog-stickers.git
 cd cog-stickers
 ```
 
-2. build model
+2. Install cog (if not installed)
 
 ```bash
-cog build -t sticker-maker
+make install-cog
 ```
 
-3. run in docker
+3. Build model
 
 ```bash
-# If your model uses a CPU:
-docker run -d -p 5001:5000 sticker-maker
+make build
+```
 
-# If your model uses a GPU:
-docker run -d -p 5001:5000 --gpus all sticker-maker
+4. Start server
 
-# If you're on an M1 Mac:
-docker run -d -p 5001:5000 --platform=linux/amd64 sticker-maker
+```bash
+make serve
 ```
 
 The server is now running locally on port 5001.
 
-To view the OpenAPI schema, open localhost:5001/openapi.json in your browser or use cURL to make requests:
+# Available Commands
+
+The project includes a Makefile with several useful commands:
+
+```bash
+make help         # Show all available commands
+make install-cog  # Install cog binary (required for build)
+make serve        # Start prediction server on port 5001
+make shell        # Open bash shell in container
+make logs         # Show container logs
+make stop         # Stop all containers
+make restart      # Restart the service
+make status       # Show container status
+make build        # Build model image
+make push         # Push model to registry
+make release      # Build and push model
+```
+
+# API Documentation
+
+To view the OpenAPI schema, open localhost:5001/openapi.json in your browser or use cURL:
 
 ```bash
 curl http://localhost:5001/openapi.json
